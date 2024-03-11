@@ -1,0 +1,110 @@
+---
+title: "FML_3_Assignment"
+author: "Hemanth"
+date: "2024-03-10"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+data <- read.csv("C:/Users/mail8/Desktop/UniversalBank.csv")
+```
+
+### splitting the dataset into 60% training data set and 40% testing data set
+
+```{r}
+set.seed(123) 
+train_index <- sample(1:nrow(data), 0.6*nrow(data))
+train <- data[train_index, ]
+valid <- data[-train_index, ]
+```
+
+#Create a pivot table for the training data with Online as a column variable, CC as a rowvariable, and Loan as a secondary row variable. The values inside the table should conveythe count. In R use functions melt() and cast(), or function table().
+```{r}
+pivot_table <- table(train$Online, train$CreditCard, train$Personal.Loan)
+head(pivot_table)
+```
+
+
+### Consider the task of classifying a customer who owns a bank credit card and is actively using online banking services. Looking at the pivot table, what is the probability that this customerwill accept the loan offer? [This is the probability of loan acceptance (Loan = 1) conditional onhaving a bank credit card (CC = 1) and being an active user of online banking services (Online= 1)]
+
+```{r}
+loan_accepted <- pivot_table[1, 1, 1] / sum(pivot_table[1, 1, ])
+```
+
+Probability of loan acceptance (Loan = 1) for customers who have a bank credit card (CC = 1) and are active users of online banking services (Online = 1) is *0.9235294*
+
+### Create two separate pivot tables for the training data. One will have Loan (rows) as a function of Online (columns) and the other will have Loan (rows) as a function of CC.
+
+```{r}
+pivot_train_online <- table(train$Personal.Loan, train$Online)
+pivot_train_cc <- table(train$Personal.Loan, train$CreditCard)
+```
+
+Pivot tables are created for Loan as a function of Online and credit card.
+
+### Compute the following quantities [P(A | B) means “the probability ofA given B”]:
+#i. P(CC = 1 | Loan = 1) (the proportion of credit card holders among the loan acceptors)
+#ii. P(Online = 1 | Loan = 1)
+#iii. P(Loan = 1) (the proportion of loan acceptors)
+#iv. P(CC = 1 | Loan = 0)
+#v. P(Online = 1 | Loan = 0)
+#vi. P(Loan = 0)
+
+```{r}
+prob_cc_given_loan <- pivot_table[2, 2, ] / sum(pivot_table[, 2, ])
+prob_online_given_loan <- pivot_table[2, , 2] / sum(pivot_table[, , 2])
+prob_loan <- sum(pivot_table[2, , ]) / sum(pivot_table)
+prob_cc_given_not_loan <- pivot_table[2, 2, ] / sum(pivot_table[, 2, ])
+prob_online_given_not_loan <- pivot_table[2, , 2] / sum(pivot_table[, , 2])
+prob_not_loan <- sum(pivot_table[1, , ]) / sum(pivot_table)
+```
+
+Pivot table[2, 2, 2] retrieves the count of customers who meet these specific conditions, which is then used to calculate the probability of loan acceptance for customers with a bank credit card and active online banking.
+
+prob_cc_given_loan:
+0-0.5379388
+1-0.06455266
+
+prob_online_given_loan
+0-0.439
+1-0.205
+
+prob_loan - 0.5996667
+
+prob_cc_given_not_loan
+0-0.5379388
+1-0.06455266
+
+prob_online_given_not_loan 
+0-0.439
+1-0.205
+
+prob_not_loan
+0.4003
+
+
+#E. Use the quantities computed above to compute the naive Bayes probability P(Loan = 1 | CC= 1, Online = 1).
+
+```{r}
+prob_loan_given_cc_online <- (prob_cc_given_loan[2] * prob_online_given_loan[2]*       prob_loan) / (prob_cc_given_loan[2] * prob_online_given_loan[2] * prob_loan + prob_cc_given_not_loan[2] * prob_online_given_not_loan[2] * prob_not_loan)
+```
+
+Naive Bayes probability of loan acceptance for a customer with a bank credit card and active online banking is 0.5996667
+
+### F. Compare this value with the one obtained from the pivot table in (B). Which is a more accurate estimate? 
+0.5996667 - F; B - 0.9235
+Bis more accurate estimate
+
+
+### G. Which of the entries in this table are needed for computing P(Loan = 1 | CC = 1, Online = 1)?Run naive Bayes on the data. Examine the model output on training data, and find the entrythat corresponds to P(Loan = 1 | CC = 1, Online = 1). Compare this to the number you obtained in (E).
+
+
+```{r}
+prob_loan_given_cc_online <- (prob_cc_given_loan[2] * prob_online_given_loan[2]*prob_loan) / (prob_cc_given_loan[2] * prob_online_given_loan[2] * prob_loan + prob_cc_given_not_loan[2] * prob_online_given_not_loan[2] * prob_not_loan)
+```
+
+The Probability of loan acceptance for a customer with a bank credit card and active online banking: 0.9235294 
+Naive Bayes algorithm probability of loan acceptance for a customer with a bank credit card and active online banking: 0.5996667 
+
+
